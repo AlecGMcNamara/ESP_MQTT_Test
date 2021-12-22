@@ -6,7 +6,7 @@ void callback(char* topic, byte* payload, unsigned int length);
 
 const char* ssid = "SKYPEMHG";
 const char* password = "8NHetSWQAJ75";
-const char* mqttServer = "192.168.0.67";  //"io.adafruit.com";
+const char* mqttServer = "192.168.0.67";
 const int mqttPort = 1883;
 const char* mqttUser = "";
 const char* mqttPassword = "";
@@ -14,6 +14,7 @@ const char* mqttTopic = "GlenCroft/Kitchen/Temperature";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+int Counter = 0;
 
 //--------- WIFI -------------------------------------------
 
@@ -46,9 +47,6 @@ void mqtt_setup() {
             delay(2000);
         }
     }
-    Serial.printf("Sending Temperature");
-    client.publish(mqttTopic, "26.5" ,true); //retain
-    client.subscribe(mqttTopic);
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -62,25 +60,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
         byteRead += (char)payload[i];
     }    
     Serial.println(byteRead);
+    Counter = byteRead.toInt() + 1;
 }
 
 void setup() {  
   Serial.begin(115200);  
   wifi_connect();
   mqtt_setup();  
+  client.subscribe(mqttTopic);
  }
 
 void loop() {
-static int delay = 0;
-static int count = 0;
-String stringOne = String(count);
-char charBuf[50]; 
-stringOne.toCharArray(charBuf, 50);
+static int delay = millis() + 2500;
+char charBuf[10]; 
+String(Counter).toCharArray(charBuf, 10);
 
     client.loop();
     if(millis() > delay){
       client.publish(mqttTopic, charBuf ,true); //retain
-      count++;
-      delay = millis() + 5000;
+      Counter++;
+      delay = millis() + 5000; //every 5 seconds
     }
 }
