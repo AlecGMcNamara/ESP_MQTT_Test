@@ -47,7 +47,7 @@ void mqtt_setup() {
         }
     }
     Serial.printf("Sending Temperature");
-    client.publish(mqttTopic, "20.9");
+    client.publish(mqttTopic, "26.5" ,true); //retain
     client.subscribe(mqttTopic);
 }
 
@@ -79,7 +79,7 @@ stringOne.toCharArray(charBuf, 50);
 
     client.loop();
     if(millis() > delay){
-      client.publish(mqttTopic, charBuf);
+      client.publish(mqttTopic, charBuf ,true); //retain
       count++;
       delay = millis() + 5000;
     }
