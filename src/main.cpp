@@ -15,6 +15,7 @@ const char* mqttTopic = "GlenCroft/Kitchen/Temperature";
 WiFiClient espClient;
 PubSubClient client(espClient);
 int intCounter = 0;
+boolean blFirstRead = false;
 
 //--------- WIFI -------------------------------------------
 
@@ -61,6 +62,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     }    
     Serial.println(byteRead);
     intCounter = byteRead.toInt() + 1;
+    blFirstRead = true;
 }
 
 void setup() {  
@@ -71,14 +73,15 @@ void setup() {
  }
 
 void loop() {
-static int delay = millis() + 2500;
+static int delay = 0;
 char charBuf[10]; 
-String(intCounter).toCharArray(charBuf, 10);
-
     client.loop();
+    String(intCounter).toCharArray(charBuf, 10);
     if(millis() > delay){
-      client.publish(mqttTopic, charBuf ,true); //retain
-      intCounter++;
-      delay = millis() + 5000; //every 5 seconds
+      if(blFirstRead==true){
+        client.publish(mqttTopic, charBuf ,true); //retain
+        intCounter++;
+      }
+      delay = millis() + 1000; //every 5 seconds
     }
 }
