@@ -2,6 +2,9 @@
 #include <WiFi.h>
 #include <Arduino.h>
 
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  30       /* Time ESP32 will go to sleep (in seconds) */
+
 void callback(char* topic, byte* payload, unsigned int length);
 
 const char* ssid = "SKYPEMHG";
@@ -22,18 +25,17 @@ void wifi_connect() {
   delay(10);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
     Serial.print(".");
+    delay(1000);
   }
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
+  Serial.print("WiFi connected, IP address: ");
   Serial.println(WiFi.localIP());
 }
 
 //------------------ MQTT ----------------------------------
 void mqtt_setup() {
   client.setServer(mqttServer, mqttPort);
-    client.setCallback(callback);
+  //  client.setCallback(callback);
     Serial.println("Connecting to MQTT…");
     while (!client.connected()) {        
         String clientId = "ESP32Client-";
@@ -62,20 +64,26 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {  
-  Serial.begin(115200);  
+  Serial.begin(115200); 
+  delay(500); // avoid bug 
   wifi_connect();
   mqtt_setup();  
-  client.subscribe(mqttTopic);
+  //client.subscribe(mqttTopic);
  }
 
 void loop() {
-static int delay = 0;
-float tempRead = (temperatureRead()-32) / 1.1;
+//static int delay = 0;
+float tempRead = temperatureRead();
 char charBuf[10]; 
     client.loop();
     String(tempRead).toCharArray(charBuf, 10);
-    if(millis() > delay){
+    //if(millis() > delay){
       client.publish(mqttTopic, charBuf,true); //retain
-      delay = millis() + 10000; //every 10 seconds
-    }
+      Serial.print("Sent: ");
+      Serial.println(charBuf); 
+    //  delay = millis() + 10000; //every 10 seconds
+    //}
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_deep_sleep_start();
+
 }
