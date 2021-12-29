@@ -68,22 +68,18 @@ void setup() {
   delay(500); // avoid bug 
   wifi_connect();
   mqtt_setup();  
-  //client.subscribe(mqttTopic);
- }
 
-void loop() {
-//static int delay = 0;
-float tempRead = temperatureRead();
+float tempRead = (temperatureRead()-32)/2; //read internal temperature F-C
 char charBuf[10]; 
     client.loop();
     String(tempRead).toCharArray(charBuf, 10);
-    //if(millis() > delay){
-      client.publish(mqttTopic, charBuf,true); //retain
-      Serial.print("Sent: ");
-      Serial.println(charBuf); 
-    //  delay = millis() + 10000; //every 10 seconds
-    //}
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-  esp_deep_sleep_start();
+    client.publish(mqttTopic, charBuf,true); //retain
+    Serial.print("Sent: ");
+    Serial.println(charBuf); 
+    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+    esp_deep_sleep_start();
+ }
+
+void loop() {
 
 }
