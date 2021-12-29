@@ -69,7 +69,7 @@ void setup() {
   wifi_connect();
   mqtt_setup();  
 
-float tempRead = (temperatureRead()-32)/2; //read internal temperature F-C
+float tempRead = temperatureRead(); //read internal temperature C
 char charBuf[10]; 
     client.loop();
     String(tempRead).toCharArray(charBuf, 10);
