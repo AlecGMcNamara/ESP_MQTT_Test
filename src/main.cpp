@@ -21,14 +21,14 @@ PubSubClient client(espClient);
 //--------- WIFI -------------------------------------------
 
 void wifi_connect() {
-  Serial.print("Starting connecting WiFi.");
+  Serial.print("Connecting to WiFi.");
   delay(10);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(1000);
   }
-  Serial.print("WiFi connected, IP address: ");
+  Serial.print("Connected, IP address: ");
   Serial.println(WiFi.localIP());
 }
 
@@ -36,7 +36,7 @@ void wifi_connect() {
 void mqtt_setup() {
   client.setServer(mqttServer, mqttPort);
   //  client.setCallback(callback);
-    Serial.println("Connecting to MQTT…");
+    Serial.print("Connecting to MQTT…");
     while (!client.connected()) {        
         String clientId = "ESP32Client-";
         clientId += String(random(0xffff), HEX);
@@ -47,13 +47,13 @@ void mqtt_setup() {
             Serial.println(client.state());
             delay(2000);
         }
+    //client.subscribe(mqttTopic);    // not needed for this project
     }
 }
-
+/* not used in this project
 void callback(char* topic, byte* payload, unsigned int length) {
 
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
+    Serial.print("Message arrived for topic: "); Serial.println(topic);
 
     String byteRead = "";
     Serial.print("Message: ");
@@ -61,25 +61,26 @@ void callback(char* topic, byte* payload, unsigned int length) {
         byteRead += (char)payload[i];
     }    
     Serial.println(byteRead);
-}
+} */
 
 void setup() {  
   Serial.begin(115200); 
-  delay(500); // avoid bug 
+  delay(500); // avoid wake up bug? 
   wifi_connect();
   mqtt_setup();  
+  client.loop();
 
-float tempRead = temperatureRead(); //read internal temperature C
-char charBuf[10]; 
-    client.loop();
-    String(tempRead).toCharArray(charBuf, 10);
-    client.publish(mqttTopic, charBuf,true); //retain
-    Serial.print("Sent: ");
-    Serial.println(charBuf); 
-    esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-    esp_deep_sleep_start();
+  char charBuf[20]; 
+  String(float(temperatureRead()-32)/2).toCharArray(charBuf, 20);
+  client.publish(mqttTopic, charBuf,true); //retain
+
+  Serial.print("Sent: ");  Serial.print(mqttTopic); Serial.print(" = "); Serial.println(charBuf); 
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  Serial.print("Going to sleep for "); Serial.print(TIME_TO_SLEEP); Serial.println(" seconds");
+
+  esp_deep_sleep_start();
  }
 
 void loop() {
-
+ //nothing to do here.
 }
