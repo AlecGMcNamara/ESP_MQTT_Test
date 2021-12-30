@@ -36,12 +36,13 @@ void wifi_connect() {
 void mqtt_setup() {
   client.setServer(mqttServer, mqttPort);
   //  client.setCallback(callback);
-    Serial.print("Connecting to MQTT…");
+    Serial.print("Connecting to MQTT....");
     while (!client.connected()) {        
         String clientId = "ESP32Client-";
         clientId += String(random(0xffff), HEX);
         if (client.connect(clientId.c_str(), mqttUser, mqttPassword )) {
-            Serial.println("connected");
+            Serial.print("connected, server: ");
+            Serial.println(mqttServer);
         } else {
             Serial.print("failed with state  ");
             Serial.println(client.state());
@@ -66,12 +67,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void setup() {  
   Serial.begin(115200); 
   delay(500); // avoid wake up bug? 
+  
   wifi_connect();
   mqtt_setup();  
   client.loop();
 
-  char charBuf[20]; 
-  String(float(temperatureRead()-32)/2).toCharArray(charBuf, 20);
+  char charBuf[10];   
+  dtostrf((temperatureRead()-32)/1.8,5,2,charBuf);
+  
   client.publish(mqttTopic, charBuf,true); //retain
 
   Serial.print("Sent: ");  Serial.print(mqttTopic); Serial.print(" = "); Serial.println(charBuf); 
